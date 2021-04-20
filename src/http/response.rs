@@ -1,5 +1,4 @@
 use super::StatusCode;
-use std::net::TcpStream;
 use std::io::{Write,Result as StreamResult};
 #[derive(Debug)]
 pub struct Response{
@@ -14,7 +13,7 @@ impl Response{
             body,
         }
     }
-    pub fn send(&self,stream:&mut TcpStream)->StreamResult<()>{
+    pub fn send(&self,stream:&mut impl Write)->StreamResult<()>{
         let body = match &self.body{
             Some(b)=>b,
             None=>"",

@@ -12,6 +12,17 @@ pub struct Request<'buf>{
     query_string: Option<QueryString<'buf>>,
     method: Methods,
 }
+impl<'buf> Request<'buf>{
+    pub fn path(&self)-> &str{
+        &self.path
+    }
+    pub fn method(&self) -> &Methods{
+        &self.method
+    }
+    pub fn query_string(&self) -> Option<&QueryString>{
+        self.query_string.as_ref()
+    }
+}
 pub enum ParseError{
     InvalidRequest,
     InvalidMethod,
