@@ -1,98 +1,93 @@
-use super::{Methods,MethodErr};
 use super::QueryString;
-use std::str;
-use std::str::Utf8Error;
+use super::{MethodErr, Methods};
 use std::convert::TryFrom;
 use std::error::Error;
-use std::fmt::{Result as FmtResult,Formatter,Display,Debug};
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::str;
+use std::str::Utf8Error;
 
 #[derive(Debug)]
-pub struct Request<'buf>{
+pub struct Request<'buf> {
     path: &'buf str,
     query_string: Option<QueryString<'buf>>,
     method: Methods,
 }
-impl<'buf> Request<'buf>{
-    pub fn path(&self)-> &str{
+impl<'buf> Request<'buf> {
+    pub fn path(&self) -> &str {
         &self.path
     }
-    pub fn method(&self) -> &Methods{
+    pub fn method(&self) -> &Methods {
         &self.method
     }
-    pub fn query_string(&self) -> Option<&QueryString>{
+    pub fn query_string(&self) -> Option<&QueryString> {
         self.query_string.as_ref()
     }
 }
-pub enum ParseError{
+pub enum ParseError {
     InvalidRequest,
     InvalidMethod,
     InvalidEncoder,
     InvalidProtocol,
 }
-impl Display for ParseError{
-    fn fmt(&self, f: &mut Formatter) -> FmtResult{
-        write!(f,"{}",self.message())
-    } 
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.message())
+    }
 }
-impl Debug for ParseError{
-    fn fmt(&self, f: &mut Formatter) -> FmtResult{
-        write!(f,"{}",self.message())
-    } 
+impl Debug for ParseError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{}", self.message())
+    }
 }
-impl ParseError{
-    fn message(&self)->&str{
-        match self{
-        Self::InvalidRequest=>"Invalid Request",
-        Self::InvalidMethod=>"Invalid Method",
-        Self::InvalidProtocol=>"Invalid Protocol",
-        Self::InvalidEncoder=>"Invalid Encoder",
+impl ParseError {
+    fn message(&self) -> &str {
+        match self {
+            Self::InvalidRequest => "Invalid Request",
+            Self::InvalidMethod => "Invalid Method",
+            Self::InvalidProtocol => "Invalid Protocol",
+            Self::InvalidEncoder => "Invalid Encoder",
         }
     }
 }
-impl Error for ParseError{
+impl Error for ParseError {}
 
-}
-
-impl From<MethodErr> for ParseError{
-    fn from(_:MethodErr)->Self{
+impl From<MethodErr> for ParseError {
+    fn from(_: MethodErr) -> Self {
         Self::InvalidMethod
     }
 }
-impl From<Utf8Error> for ParseError{
-    fn from(_: Utf8Error) -> Self{
+impl From<Utf8Error> for ParseError {
+    fn from(_: Utf8Error) -> Self {
         Self::InvalidEncoder
     }
-    
 }
-impl<'buf> TryFrom<&'buf [u8]> for Request<'buf>{
+impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
-    fn try_from(value:&'buf [u8])->Result<Request<'buf>,Self::Error>{
+    fn try_from(value: &'buf [u8]) -> Result<Request<'buf>, Self::Error> {
         let request = str::from_utf8(&value)?;
-        let (method,request) = nextword(request).ok_or(ParseError::InvalidRequest)?;
-        let (mut path,request)  = nextword(request).ok_or(ParseError::InvalidRequest)?;
-        let (protocol,_) = nextword(request).ok_or(ParseError::InvalidRequest)?;
-        if protocol != "HTTP/1.1"{
+        let (method, request) = nextword(request).ok_or(ParseError::InvalidRequest)?;
+        let (mut path, request) = nextword(request).ok_or(ParseError::InvalidRequest)?;
+        let (protocol, _) = nextword(request).ok_or(ParseError::InvalidRequest)?;
+        if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
         }
         let method: Methods = method.parse()?;
         let mut query_string = None;
-        if let Some(i) = path.find("?"){
-            query_string = Some(QueryString::from(&path[i+1..]));
+        if let Some(i) = path.find("?") {
+            query_string = Some(QueryString::from(&path[i + 1..]));
             path = &path[..i];
         }
-        Ok(
-            Self{
-                path,
-                query_string,
-                method
-            }
-        )
-       }
+        Ok(Self {
+            path,
+            query_string,
+            method,
+        })
+    }
 }
-fn nextword(val:&str)->Option<(&str,&str)>{
-    for (i,c) in val.chars().enumerate(){
-        if c==' ' || c == '\r'{
-            return Some((&val[..i],&val[i+1..]));
+fn nextword(val: &str) -> Option<(&str, &str)> {
+    for (i, c) in val.chars().enumerate() {
+        if c == ' ' || c == '\r' {
+            return Some((&val[..i], &val[i + 1..]));
         }
     }
     None

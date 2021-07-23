@@ -1,22 +1,19 @@
 use super::StatusCode;
-use std::io::{Write,Result as StreamResult};
+use std::io::{Result as StreamResult, Write};
 #[derive(Debug)]
-pub struct Response{
+pub struct Response {
     status_code: StatusCode,
     body: Option<String>,
 }
 
-impl Response{
-    pub fn new(status_code: StatusCode,body:Option<String>)->Self{
-        Response{
-            status_code,
-            body,
-        }
+impl Response {
+    pub fn new(status_code: StatusCode, body: Option<String>) -> Self {
+        Response { status_code, body }
     }
-    pub fn send(&self,stream:&mut impl Write)->StreamResult<()>{
-        let body = match &self.body{
-            Some(b)=>b,
-            None=>"",
+    pub fn send(&self, stream: &mut impl Write) -> StreamResult<()> {
+        let body = match &self.body {
+            Some(b) => b,
+            None => "",
         };
         write!(
             stream,
