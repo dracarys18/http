@@ -71,6 +71,10 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         if protocol != "HTTP/1.1" {
             return Err(ParseError::InvalidProtocol);
         }
+
+        //If the path is empty set it to /
+        path.is_empty().then(|| "/");
+
         let method: Methods = method.parse()?;
         let mut query_string = None;
         if let Some(i) = path.find('?') {
