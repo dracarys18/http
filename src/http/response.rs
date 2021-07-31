@@ -13,7 +13,7 @@ impl Response {
     pub async fn send(&self, stream: &mut tokio::net::TcpStream) -> Result<()> {
         let body = match &self.body {
             Some(b) => b,
-            None => "",
+            None => self.status_code.reason_phrase(),
         };
         stream
             .write_all(
