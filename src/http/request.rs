@@ -14,7 +14,7 @@ pub struct Request<'buf> {
 }
 impl<'buf> Request<'buf> {
     pub fn path(&self) -> &str {
-        &self.path
+        self.path
     }
     pub fn method(&self) -> &Methods {
         &self.method
@@ -64,7 +64,7 @@ impl From<Utf8Error> for ParseError {
 impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     type Error = ParseError;
     fn try_from(value: &'buf [u8]) -> Result<Request<'buf>, Self::Error> {
-        let request = str::from_utf8(&value)?;
+        let request = str::from_utf8(value)?;
         let (method, request) = nextword(request).ok_or(ParseError::InvalidRequest)?;
         let (mut path, request) = nextword(request).ok_or(ParseError::InvalidRequest)?;
         let (protocol, _) = nextword(request).ok_or(ParseError::InvalidRequest)?;
@@ -73,7 +73,7 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         }
         let method: Methods = method.parse()?;
         let mut query_string = None;
-        if let Some(i) = path.find("?") {
+        if let Some(i) = path.find('?') {
             query_string = Some(QueryString::from(&path[i + 1..]));
             path = &path[..i];
         }

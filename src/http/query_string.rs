@@ -16,10 +16,10 @@ impl<'buf> QueryString<'buf> {
 impl<'buf> From<&'buf str> for QueryString<'buf> {
     fn from(val: &'buf str) -> Self {
         let mut data = HashMap::new();
-        for i in val.split("&") {
+        for i in val.split('&') {
             let mut key = i;
             let mut valu = "";
-            if let Some(j) = i.find("=") {
+            if let Some(j) = i.find('=') {
                 key = &i[..j];
                 valu = &i[j + 1..];
             }
